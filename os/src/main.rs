@@ -4,14 +4,39 @@
 #![no_main]
 #![feature(global_asm)]
 
+mod config;
 mod lang_items;
+mod loader;
 mod sbi;
 mod std;
+mod syscall;
+mod task;
+mod trap;
 
 global_asm!(include_str!("entry.asm"));
+global_asm!(include_str!("link_app.S"));
 
 #[no_mangle]
-pub fn rust_main() -> ! {
+pub fn rust_main() {
+    print_section_info();
+    clear_bss();
+    kernel_info!("Trap initialized.");
+    trap::init();
+    let (apps, _) = loader::load_apps();
+    // trap::run(apps[0]);
+    task::start_running();
+    unreachable!();
+}
+
+fn clear_bss() {
+    extern "C" {
+        fn sbss();
+        fn ebss();
+    }
+    (sbss as usize..ebss as usize).for_each(|a| unsafe { (a as *mut u8).write_volatile(0) });
+}
+
+fn print_section_info() {
     extern "C" {
         fn stext();
         fn etext();
@@ -34,13 +59,4 @@ pub fn rust_main() -> ! {
         boot_stack as usize,
         boot_stack_top as usize
     );
-    panic!("It should shutdown!");
-}
-
-fn clear_bss() {
-    extern "C" {
-        fn sbss();
-        fn ebss();
-    }
-    (sbss as usize..ebss as usize).for_each(|a| unsafe { (a as *mut u8).write_volatile(0) });
 }

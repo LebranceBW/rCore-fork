@@ -1,39 +1,18 @@
-use crate::sbi::console_putchar;
+use crate::syscall::write;
 use core::fmt::{self, Write};
+const STDOUT: usize = 1;
 
 struct Stdout;
+
 impl Write for Stdout {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        for c in s.chars() {
-            console_putchar(c as usize);
-        }
+        write(STDOUT, s.as_bytes());
         Ok(())
     }
 }
 
 pub fn print(args: fmt::Arguments) {
     Stdout.write_fmt(args).unwrap();
-}
-
-#[macro_export]
-macro_rules! kernel_error{
-    ($fmt: literal $(, $($arg: tt)+)?) => {
-        crate::log!("\x1b[31m[kernel] ", $fmt $(, $($arg)+)?)
-    }
-}
-
-#[macro_export]
-macro_rules! kernel_debug{
-    ($fmt: literal $(, $($arg: tt)+)?) => {
-        crate::log!("\x1b[34m[kernel] ", $fmt $(, $($arg)+)?)
-    }
-}
-
-#[macro_export]
-macro_rules! kernel_info{
-    ($fmt: literal $(, $($arg: tt)+)?) => {
-        crate::log!("\x1b[m[kernel] ", $fmt $(, $($arg)+)?)
-    }
 }
 
 #[macro_export]
