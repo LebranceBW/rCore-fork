@@ -6,7 +6,7 @@
 #[macro_use]
 pub mod std;
 mod lang_items;
-mod syscall;
+pub mod syscall;
 use syscall::{exit};
 
 #[no_mangle]

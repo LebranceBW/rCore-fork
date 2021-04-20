@@ -19,46 +19,6 @@ pub fn init() {
     }
 }
 
-// #[repr(align(4096))]
-// struct KernelStack {
-//     data: [u8; APP_KERNEL_STACK_SIZE],
-// }
-
-// #[repr(align(4096))]
-// struct UserStack {
-//     data: [u8; APP_USER_STACK_SIZE],
-// }
-
-// static KERNEL_STACK: KernelStack = KernelStack { data: [0; APP_KERNEL_STACK_SIZE] };
-// static USER_STACK: UserStack = UserStack { data: [0; APP_USER_STACK_SIZE] };
-
-
-// impl KernelStack {
-//     fn get_sp(&self) -> usize {
-//         self.data.as_ptr() as usize + APP_KERNEL_STACK_SIZE
-//     }
-//     pub fn push_context(&self, cx: TrapContext) -> &'static mut TrapContext {
-//         let cx_ptr = (self.get_sp() - core::mem::size_of::<TrapContext>()) as *mut TrapContext;
-//         unsafe { *cx_ptr = cx; }
-//         unsafe { cx_ptr.as_mut().unwrap() }
-//     }
-// }
-
-// impl UserStack {
-//     fn get_sp(&self) -> usize {
-//         self.data.as_ptr() as usize + APP_USER_STACK_SIZE
-//     }
-
-// }
-
-// pub fn run(addr:usize) {
-//     unsafe {
-//         __restore(KERNEL_STACK.push_context(
-//             TrapContext::app_init_context(APP_BASE_ADDRESS, USER_STACK.get_sp())
-//         ) as *const _ as usize);
-//     }
-// }
-
 #[no_mangle]
 pub fn trap_handler(cx: &mut TrapContext) -> &mut TrapContext {
     let scause = scause::read();

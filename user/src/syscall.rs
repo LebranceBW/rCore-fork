@@ -1,4 +1,5 @@
 const SYSCALL_WRITE: usize = 64;
+const SYSCALL_YIELD: usize = 65;
 const SYSCALL_EXIT: usize = 93;
 
 pub fn sys_write(fd: usize, buffer: &[u8]) -> isize {
@@ -27,4 +28,8 @@ pub fn write(fd: usize, buf: &[u8]) -> isize {
 
 pub fn exit(exit_code: i32) -> isize {
     sys_exit(exit_code)
+}
+
+pub fn yield_() -> isize {
+    syscall(SYSCALL_YIELD, [0, 0, 0])
 }
