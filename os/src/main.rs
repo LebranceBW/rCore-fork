@@ -12,6 +12,7 @@ mod std;
 mod syscall;
 mod task;
 mod trap;
+mod test;
 
 global_asm!(include_str!("entry.asm"));
 global_asm!(include_str!("link_app.S"));
@@ -22,7 +23,7 @@ pub fn rust_main() {
     clear_bss();
     kernel_info!("Trap initialized.");
     trap::init();
-    let (apps, _) = loader::load_apps();
+    let (_apps, _) = loader::load_apps();
     // trap::run(apps[0]);
     task::start_running();
     unreachable!();

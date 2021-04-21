@@ -65,9 +65,9 @@ impl Task {
     pub fn ptr_to_context(&self) -> *const usize {
         &self.context as *const usize
     }
-    pub fn mark_status(&mut self, next_status: TaskStatus) {
-        self.status = next_status;
-    }
+    // pub fn mark_status(&mut self, next_status: TaskStatus) {
+    //     self.status = next_status;
+    // }
 }
 
 static USER_STACKS: [UserStack; MAX_JOB_NUM] = [UserStack {
@@ -106,12 +106,10 @@ impl KernelStack {
         ptr -= size_of::<TrapContext>();
         unsafe {
             *(ptr as *mut TrapContext) = trap_context;
-            kernel_debug!("{:?}", *(ptr as *const TrapContext));
         }
         ptr -= size_of::<TaskContext>();
         unsafe {
             *(ptr as *mut TaskContext) = task_context;
-            kernel_debug!("{:?}", *(ptr as *const TaskContext));
         }
         ptr
     }

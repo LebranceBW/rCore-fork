@@ -21,6 +21,6 @@ pub fn run_next_task() {
     TASK_MANAGER.run_next();
 }
 
-pub fn terminal_current() {
-    TASK_MANAGER.terminal_current();
+pub fn terminate_current() {
+    TASK_MANAGER.terminate_current();
 }

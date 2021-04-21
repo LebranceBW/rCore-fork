@@ -1,11 +1,11 @@
-use crate::kernel_info;
+
 use crate::syscall::*;
 use riscv::register::mtvec::TrapMode;
 use riscv::register::scause::{Exception, Trap};
 use riscv::register::sstatus::Sstatus;
 use riscv::register::sstatus::SPP;
 use riscv::register::{scause, sstatus, stval, stvec};
-use crate::config::*;
+
 
 global_asm!(include_str!("trap.S"));
 extern "C" {
