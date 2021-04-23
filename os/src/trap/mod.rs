@@ -1,16 +1,15 @@
-
 use crate::syscall::*;
+use crate::task::run_next_task;
+use crate::timer::set_time_trigger;
 use riscv::register::mtvec::TrapMode;
-use riscv::register::scause::{Exception, Trap};
+use riscv::register::scause::{Exception, Interrupt, Trap};
 use riscv::register::sstatus::Sstatus;
 use riscv::register::sstatus::SPP;
 use riscv::register::{scause, sstatus, stval, stvec};
 
-
 global_asm!(include_str!("trap.S"));
 extern "C" {
     fn __trap_entrance();
-    // fn __restore(cx_addr: usize); 
 }
 
 pub fn init() {
@@ -27,6 +26,10 @@ pub fn trap_handler(cx: &mut TrapContext) -> &mut TrapContext {
         Trap::Exception(Exception::UserEnvCall) => {
             cx.sepc += 4;
             cx.x[10] = syscall(cx.x[17], [cx.x[10], cx.x[11], cx.x[12]]) as usize;
+        }
+        Trap::Interrupt(Interrupt::SupervisorTimer) => {
+            set_time_trigger();
+            run_next_task();
         }
         Trap::Exception(Exception::StoreFault) | Trap::Exception(Exception::StorePageFault) => {
             panic!("PageFault in application, core dumped.");

@@ -1,5 +1,5 @@
 use crate::config::*;
-use crate::kernel_debug;
+
 use crate::trap::TrapContext;
 use core::default::Default;
 use core::mem::size_of;

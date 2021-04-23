@@ -1,28 +1,25 @@
 use crate::config::{APP_ADDRESS_STEP, APP_BASE_ADDRESS, MAX_JOB_NUM};
-use crate::kernel_debug;
 use core::slice::from_raw_parts;
 use core::slice::from_raw_parts_mut;
+use log::debug;
 
 pub fn load_apps() -> ([usize; MAX_JOB_NUM], usize) {
     extern "C" {
         fn _num_app();
     }
-    kernel_debug!("load app to memory");
+    debug!("load app to memory");
     let app_meta_table_ptr = _num_app as usize as *const u64;
     let app_num = unsafe { app_meta_table_ptr.read_volatile() };
     let app_link_addr_table =
         unsafe { core::slice::from_raw_parts(app_meta_table_ptr.add(1), (app_num + 1) as usize) };
-    kernel_debug!("app_link_addr_table = {:?}", app_link_addr_table);
+    debug!("app_link_addr_table = {:?}", app_link_addr_table);
     let mut app_runtime_addresses = [0; MAX_JOB_NUM];
     for (i, address_range) in app_link_addr_table.windows(2).enumerate() {
         let (app_start, app_end) = (address_range[0], address_range[1]);
         let dst_addr = APP_BASE_ADDRESS + i * APP_ADDRESS_STEP;
-        kernel_debug!(
+        debug!(
             "app_{}, copy from [{:#x}, {:#x}] to {:#x}",
-            i,
-            app_start,
-            app_end,
-            dst_addr
+            i, app_start, app_end, dst_addr
         );
         app_runtime_addresses[i] = dst_addr;
         (dst_addr..dst_addr + APP_ADDRESS_STEP).for_each(|addr| unsafe {

@@ -1,6 +1,7 @@
 const SYSCALL_WRITE: usize = 64;
 const SYSCALL_YIELD: usize = 65;
 const SYSCALL_EXIT: usize = 93;
+const SYSCALL_GET_TIME: usize = 169;
 
 pub fn sys_write(fd: usize, buffer: &[u8]) -> isize {
     syscall(SYSCALL_WRITE, [fd, buffer.as_ptr() as usize, buffer.len()])
@@ -32,4 +33,8 @@ pub fn exit(exit_code: i32) -> isize {
 
 pub fn yield_() -> isize {
     syscall(SYSCALL_YIELD, [0, 0, 0])
+}
+
+pub fn get_time() -> isize {
+    syscall(SYSCALL_GET_TIME, [0, 0, 0])
 }

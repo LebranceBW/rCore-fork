@@ -1,14 +1,14 @@
 pub mod context;
 mod task_manager;
 
-use crate::kernel_info;
 use crate::loader::load_apps;
 use lazy_static::*;
+use log::info;
 use task_manager::TaskManager;
 
 lazy_static! {
     static ref TASK_MANAGER: TaskManager = {
-        kernel_info!("Task manager initialized");
+        info!("Task manager initialized");
         TaskManager::new(load_apps())
     };
 }
