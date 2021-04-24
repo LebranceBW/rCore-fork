@@ -1,6 +1,6 @@
+use super::dispatcher::{Dispatcher, JustEnoughOne, Stride};
 use crate::config::MAX_JOB_NUM;
-use crate::task::context::Task;
-use crate::task::context::TaskStatus;
+use crate::task::context::TaskControlBlock;
 use core::cell::RefCell;
 use core::mem::drop;
 use core::mem::MaybeUninit;
@@ -15,9 +15,10 @@ extern "C" {
 }
 
 struct TaskManagerInner {
-    tasks: [Task; MAX_JOB_NUM],
+    tasks: [TaskControlBlock; MAX_JOB_NUM],
     tasks_num: usize,
     current_task_id: Option<usize>,
+    dispatcher: Stride, // dispatcher: JustEnoughOne
 }
 pub struct TaskManager {
     inner: RefCell<TaskManagerInner>,
@@ -27,9 +28,10 @@ unsafe impl Sync for TaskManager {}
 
 impl TaskManager {
     pub fn new((addr, tasks_num): ([usize; MAX_JOB_NUM], usize)) -> Self {
-        let mut tasks: [Task; MAX_JOB_NUM] = unsafe { MaybeUninit::uninit().assume_init() };
+        let mut tasks: [TaskControlBlock; MAX_JOB_NUM] =
+            unsafe { MaybeUninit::uninit().assume_init() };
         for i in 0..tasks_num {
-            tasks[i] = Task::new(addr[i], i);
+            tasks[i] = TaskControlBlock::new(addr[i], i);
         }
         let current_task_id = None;
         Self {
@@ -37,43 +39,54 @@ impl TaskManager {
                 tasks,
                 tasks_num,
                 current_task_id,
+                dispatcher: Stride::new(tasks_num),
             }),
         }
     }
     pub fn run_next(&self) {
-        if let Some(task_id) = self.find_a_ready_task() {
-            unsafe {
-                debug!("Task_{} switch in", task_id);
+        let current_task_id = {
+            let inner = self.inner.borrow_mut();
+            inner.current_task_id
+        };
+        let task_id = self.find_a_ready_task();
+        match (current_task_id, task_id) {
+            (Some(current_task_id), Some(next_task_id)) => {
+                debug!("Task_{} switch in", next_task_id);
                 let switch_in_context_ptr = {
                     let mut inner = self.inner.borrow_mut();
-                    let in_task = &mut inner.tasks[task_id];
-                    in_task.status = TaskStatus::Running;
+                    let in_task = &mut inner.tasks[next_task_id];
                     in_task.ptr_to_context()
                 };
                 let switch_out_context_ptr = {
                     let mut inner = self.inner.borrow_mut();
-                    let current_task_id = inner.current_task_id.unwrap();
-                    inner.current_task_id = Some(task_id);
+                    inner.dispatcher.push(current_task_id);
+                    inner.current_task_id = Some(next_task_id);
                     debug!("Task_{} switch out", current_task_id);
                     let out_task = &mut inner.tasks[current_task_id];
-                    out_task.status = TaskStatus::Ready;
                     out_task.ptr_to_context()
                 };
-                __switch_task(switch_out_context_ptr, switch_in_context_ptr);
+                unsafe {
+                    __switch_task(switch_out_context_ptr, switch_in_context_ptr);
+                }
             }
-        } else {
-            panic!("All tasks finished");
+            (Some(_), None) => {
+                static mut hasLogged: bool = false;
+                if unsafe { !hasLogged } {
+                    debug!("No more tasks to switch in");
+                    unsafe {
+                        hasLogged = true;
+                    }
+                }
+            }
+            _ => {
+                panic!("All tasks finished");
+            }
         }
     }
 
     fn find_a_ready_task(&self) -> Option<usize> {
-        let inner = self.inner.borrow_mut();
-        for i in 0..inner.tasks_num {
-            if inner.tasks[i].status == TaskStatus::Ready {
-                return Some(i);
-            }
-        }
-        inner.current_task_id
+        let mut inner = self.inner.borrow_mut();
+        inner.dispatcher.pop()
     }
 
     pub fn run_first(&self) {
@@ -81,7 +94,6 @@ impl TaskManager {
             debug!("Task_{} start running!", task_id);
             let mut inner = self.inner.borrow_mut();
             let task = &mut inner.tasks[task_id];
-            task.status = TaskStatus::Running;
             let context_ptr = task.ptr_to_context();
             inner.current_task_id = Some(task_id);
             core::mem::drop(inner);
@@ -97,9 +109,14 @@ impl TaskManager {
         let mut task_manager_inner = self.inner.borrow_mut();
         let id = task_manager_inner.current_task_id.unwrap();
         debug!("Task_{} terminated!", id);
-        task_manager_inner.tasks[id].status = TaskStatus::Finished;
         task_manager_inner.current_task_id = None;
         drop(task_manager_inner);
         self.run_first();
+    }
+
+    pub fn set_priority(&self, prio: usize) {
+        let mut inner = self.inner.borrow_mut();
+        let id = inner.current_task_id.unwrap();
+        inner.dispatcher.set_priority(id, prio);
     }
 }

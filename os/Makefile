@@ -4,6 +4,7 @@ MODE := release
 KERNEL_ELF := target/$(TARGET)/$(MODE)/os
 KERNEL_BIN := $(KERNEL_ELF).bin
 DISASM_TMP := target/$(TARGET)/$(MODE)/asm
+LOGGER_LEVEL := concise
 
 # BOARD
 BOARD ?= qemu
@@ -40,13 +41,13 @@ env:
 $(KERNEL_BIN): kernel
 	@$(OBJCOPY) $(KERNEL_ELF) --strip-all -O binary $@
 
+
 kernel:
 	@cd ../user && make build
 	@echo Platform: $(BOARD)
 	@cp src/linker-$(BOARD).ld src/linker.ld
-	@cargo build --release
+	@cargo build --release --features="$(LOGGER_LEVEL)"
 	@rm src/linker.ld
-
 
 clean:
 	@cargo clean
@@ -59,9 +60,11 @@ disasm-vim: kernel
 	@vim $(DISASM_TMP)
 	@rm $(DISASM_TMP)
 
+run: LOGGER_LEVEL="concise" 
 run: run-inner
 
-	
+rund: LOGGER_LEVEL="verbose" 
+rund: run-inner
 
 run-inner: build
 ifeq ($(BOARD),qemu)

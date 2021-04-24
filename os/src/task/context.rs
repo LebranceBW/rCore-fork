@@ -1,7 +1,5 @@
 use crate::config::*;
-
 use crate::trap::TrapContext;
-use core::default::Default;
 use core::mem::size_of;
 
 #[repr(C)]
@@ -26,48 +24,27 @@ impl TaskContext {
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub enum TaskStatus {
-    UnInited,
-    Ready,
-    Running,
-    Finished,
-}
-
-pub struct Task {
+pub struct TaskControlBlock {
     pub context: usize,
-    pub status: TaskStatus,
-    pub task_id: Option<usize>,
+    // pub status: TaskStatus,
+    pub task_id: usize,
 }
 
-impl Default for Task {
-    fn default() -> Self {
-        Task {
-            context: 0,
-            status: TaskStatus::UnInited,
-            task_id: None,
-        }
-    }
-}
-
-impl Task {
+impl TaskControlBlock {
     pub fn new(addr: usize, id: usize) -> Self {
         //init trap context
         let trap_context = TrapContext::app_init_context(addr, USER_STACKS[id].stack_bottom());
         let task_context = TaskContext::app_init_task_context();
         let init_context = KERNEL_STACKS[id].prepare_runtime_stack(task_context, trap_context);
-        Task {
+        Self {
             context: init_context,
-            status: TaskStatus::Ready,
-            task_id: Some(id),
+            // status: TaskStatus::Ready,
+            task_id: id,
         }
     }
     pub fn ptr_to_context(&self) -> *const usize {
         &self.context as *const usize
     }
-    // pub fn mark_status(&mut self, next_status: TaskStatus) {
-    //     self.status = next_status;
-    // }
 }
 
 static USER_STACKS: [UserStack; MAX_JOB_NUM] = [UserStack {

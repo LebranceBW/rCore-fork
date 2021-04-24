@@ -2,17 +2,19 @@
 #![feature(panic_info_message)]
 #![no_std]
 #![no_main]
+#![feature(alloc_error_handler)]
 #![feature(global_asm)]
 
+extern crate alloc;
 mod config;
 mod console;
 mod lang_items;
 mod loader;
+mod mm;
 mod mylog;
 mod sbi;
 mod syscall;
 mod task;
-mod test;
 mod timer;
 mod trap;
 
@@ -25,8 +27,13 @@ global_asm!(include_str!("link_app.S"));
 pub fn rust_main() {
     print_section_info();
     clear_bss();
+    #[cfg(feature = "verbose")]
+    mylog::init(log::LevelFilter::Trace);
+    #[cfg(feature = "concise")]
     mylog::init(log::LevelFilter::Info);
     info!("Logger initialized.");
+    mm::init_heap();
+    info!("Heap initialized.");
     trap::init();
     info!("Trap initialized.");
     timer::init();

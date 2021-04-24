@@ -4,16 +4,16 @@ use log::{Level, LevelFilter, Metadata, Record};
 const COLOR_FMT_RED: &str = "\x1b[31m";
 const COLOR_FMT_YELLOW: &str = "\x1b[93m";
 const COLOR_FMT_WHITE: &str = "\x1b[m";
-const COLOR_FMT_GRAY: &str = "\x1b[90m";
+const COLOR_FMT_GRAY: &str = "\x1b[47m";
 const COLOR_FMT_BLUE: &str = "\x1b[34m";
 const FMT_END: &str = "\x1b[0m";
 
 pub struct SimpleLogger;
 
-pub static logger: SimpleLogger = SimpleLogger {};
+pub static LOGGER: SimpleLogger = SimpleLogger {};
 
 impl log::Log for SimpleLogger {
-    fn enabled(&self, metadata: &Metadata) -> bool {
+    fn enabled(&self, _metadata: &Metadata) -> bool {
         // metadata.level() <= Level::Trace
         true
     }
@@ -41,6 +41,6 @@ impl log::Log for SimpleLogger {
 }
 
 pub fn init(level: LevelFilter) {
-    log::set_logger(&logger).unwrap();
+    log::set_logger(&LOGGER).unwrap();
     log::set_max_level(level);
 }

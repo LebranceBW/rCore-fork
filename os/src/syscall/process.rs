@@ -1,4 +1,4 @@
-use crate::task::{run_next_task, terminate_current};
+use crate::task::{run_next_task, set_priority, terminate_current};
 use crate::timer::get_time_ms;
 use log::info;
 
@@ -15,4 +15,9 @@ pub fn sys_yield() -> isize {
 
 pub fn sys_get_time() -> isize {
     unsafe { get_time_ms() as isize }
+}
+
+pub fn sys_set_priority(prio: usize) -> isize {
+    set_priority(prio);
+    0
 }

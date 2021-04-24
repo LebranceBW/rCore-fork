@@ -1,4 +1,5 @@
 pub mod context;
+mod dispatcher;
 mod task_manager;
 
 use crate::loader::load_apps;
@@ -23,4 +24,8 @@ pub fn run_next_task() {
 
 pub fn terminate_current() {
     TASK_MANAGER.terminate_current();
+}
+
+pub fn set_priority(_prio: usize) {
+    TASK_MANAGER.set_priority(_prio);
 }
