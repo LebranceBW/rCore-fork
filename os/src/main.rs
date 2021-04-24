@@ -25,13 +25,13 @@ global_asm!(include_str!("link_app.S"));
 
 #[no_mangle]
 pub fn rust_main() {
-    print_section_info();
     clear_bss();
     #[cfg(feature = "verbose")]
     mylog::init(log::LevelFilter::Trace);
     #[cfg(feature = "concise")]
     mylog::init(log::LevelFilter::Info);
     info!("Logger initialized.");
+    print_section_info();
     mm::init_heap();
     info!("Heap initialized.");
     trap::init();
@@ -64,7 +64,6 @@ fn print_section_info() {
         fn boot_stack();
         fn boot_stack_top();
     }
-    clear_bss();
     info!(".text [{:#x}, {:#x})", stext as usize, etext as usize);
     info!(".rodata [{:#x}, {:#x})", srodata as usize, erodata as usize);
     info!(".data [{:#x}, {:#x})", sdata as usize, edata as usize);

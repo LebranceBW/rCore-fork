@@ -26,6 +26,6 @@ pub fn terminate_current() {
     TASK_MANAGER.terminate_current();
 }
 
-pub fn set_priority(_prio: usize) {
-    TASK_MANAGER.set_priority(_prio);
+pub fn set_priority(prio: isize) -> isize {
+    TASK_MANAGER.set_priority(prio)
 }

@@ -7,7 +7,7 @@
 pub mod std;
 mod lang_items;
 pub mod syscall;
-use syscall::{exit};
+pub use syscall::*;
 
 #[no_mangle]
 #[link_section = ".text.entry"]

@@ -2,6 +2,7 @@ const SYSCALL_WRITE: usize = 64;
 const SYSCALL_YIELD: usize = 65;
 const SYSCALL_EXIT: usize = 93;
 const SYSCALL_GET_TIME: usize = 169;
+const SYSCALL_SET_PRIORITY: usize = 140;
 
 pub fn sys_write(fd: usize, buffer: &[u8]) -> isize {
     syscall(SYSCALL_WRITE, [fd, buffer.as_ptr() as usize, buffer.len()])
@@ -37,4 +38,8 @@ pub fn yield_() -> isize {
 
 pub fn get_time() -> isize {
     syscall(SYSCALL_GET_TIME, [0, 0, 0])
+}
+
+pub fn set_priority(prio: isize) -> isize {
+    syscall(SYSCALL_SET_PRIORITY, [prio as usize, 0, 0])
 }

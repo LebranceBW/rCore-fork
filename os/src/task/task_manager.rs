@@ -1,10 +1,10 @@
-use super::dispatcher::{Dispatcher, JustEnoughOne, Stride};
+use alloc::collections::BinaryHeap;
 use crate::config::MAX_JOB_NUM;
-use crate::task::context::TaskControlBlock;
+use crate::task::context::{TIME_SLICE, TaskControlBlock};
 use core::cell::RefCell;
 use core::mem::drop;
-use core::mem::MaybeUninit;
 use log::debug;
+use log::warn;
 
 const __UNUSED_TASK_CONTEXT_PTR: *mut usize = core::ptr::null_mut::<usize>();
 
@@ -15,11 +15,8 @@ extern "C" {
 }
 
 struct TaskManagerInner {
-    tasks: [TaskControlBlock; MAX_JOB_NUM],
-    tasks_num: usize,
-    current_task_id: Option<usize>,
-    // dispatcher: Stride,
-    dispatcher: JustEnoughOne
+    tasks: BinaryHeap<TaskControlBlock>,
+    current_task: Option<TaskControlBlock>
 }
 pub struct TaskManager {
     inner: RefCell<TaskManagerInner>,
@@ -29,48 +26,46 @@ unsafe impl Sync for TaskManager {}
 
 impl TaskManager {
     pub fn new((addr, tasks_num): ([usize; MAX_JOB_NUM], usize)) -> Self {
-        let mut tasks: [TaskControlBlock; MAX_JOB_NUM] =
-            unsafe { MaybeUninit::uninit().assume_init() };
-        for i in 0..tasks_num {
-            tasks[i] = TaskControlBlock::new(addr[i], i);
+        let mut tasks = BinaryHeap::new();
+        for i in 0..tasks_num{
+            tasks.push(TaskControlBlock::new(addr[i], i))
         }
-        let current_task_id = None;
         Self {
-            inner: RefCell::new(TaskManagerInner {
-                tasks,
-                tasks_num,
-                current_task_id,
-                dispatcher: JustEnoughOne::new(tasks_num),
-            }),
+            inner: RefCell::new(
+                TaskManagerInner {
+                    tasks,
+                    current_task: None
+                }
+            )
         }
     }
     pub fn run_next(&self) {
-        let current_task_id = {
-            let inner = self.inner.borrow_mut();
-            inner.current_task_id
-        };
-        let task_id = self.find_a_ready_task();
-        match (current_task_id, task_id) {
-            (Some(current_task_id), Some(next_task_id)) => {
-                debug!("Task_{} switch in", next_task_id);
-                let switch_in_context_ptr = {
-                    let mut inner = self.inner.borrow_mut();
-                    let in_task = &mut inner.tasks[next_task_id];
-                    in_task.ptr_to_context()
-                };
-                let switch_out_context_ptr = {
-                    let mut inner = self.inner.borrow_mut();
-                    inner.dispatcher.push(current_task_id);
-                    inner.current_task_id = Some(next_task_id);
-                    debug!("Task_{} switch out", current_task_id);
-                    let out_task = &mut inner.tasks[current_task_id];
-                    out_task.ptr_to_context()
-                };
+        let mut inner = self.inner.borrow_mut();
+        match (inner.current_task.take(), inner.tasks.pop()) {
+            (Some(current_task), Some(mut next_task)) => {
+                next_task.update_stride();
+                let switch_in_context_ptr = next_task.ptr_to_context();
+                let switch_out_context_ptr = current_task.ptr_to_context();
+                debug!("Task_{} <==> Task_{}", current_task.task_id,  next_task.task_id);
+                if current_task.total_time_ms > 500 * TIME_SLICE {
+                    warn!("Current task time out. X");
+                }
+                else {
+                    inner.tasks.push(current_task);
+                }
+                inner.current_task = Some(next_task);
+                core::mem::drop(inner);
                 unsafe {
                     __switch_task(switch_out_context_ptr, switch_in_context_ptr);
                 }
             }
-            (Some(_), None) => {
+            (Some(mut task), None) => {
+                if task.total_time_ms > 500 * TIME_SLICE {
+                    warn!("Current task time out. X");
+                    panic!("No more task need to execute");
+                }
+                task.update_stride();
+                inner.current_task = Some(task);
                 static mut hasLogged: bool = false;
                 if unsafe { !hasLogged } {
                     debug!("No more tasks to switch in");
@@ -79,24 +74,22 @@ impl TaskManager {
                     }
                 }
             }
-            _ => {
-                panic!("All tasks finished");
-            }
+            _ => panic!("No more task need to execute")
         }
     }
 
-    fn find_a_ready_task(&self) -> Option<usize> {
+    fn find_a_ready_task(&self) -> Option<TaskControlBlock> {
         let mut inner = self.inner.borrow_mut();
-        inner.dispatcher.pop()
+        inner.tasks.pop()
     }
 
     pub fn run_first(&self) {
-        if let Some(task_id) = self.find_a_ready_task() {
-            debug!("Task_{} start running!", task_id);
+        if let Some(mut task) = self.find_a_ready_task() {
+            debug!("Task_{} start running!", task.task_id);
+            task.update_stride();
             let mut inner = self.inner.borrow_mut();
-            let task = &mut inner.tasks[task_id];
             let context_ptr = task.ptr_to_context();
-            inner.current_task_id = Some(task_id);
+            inner.current_task.replace(task);
             core::mem::drop(inner);
             unsafe {
                 __switch_task(__UNUSED_TASK_CONTEXT_PTR, context_ptr);
@@ -108,16 +101,17 @@ impl TaskManager {
 
     pub fn terminate_current(&self) {
         let mut task_manager_inner = self.inner.borrow_mut();
-        let id = task_manager_inner.current_task_id.unwrap();
-        debug!("Task_{} terminated!", id);
-        task_manager_inner.current_task_id = None;
+        let task = task_manager_inner.current_task.take().unwrap();
+        debug!("Task_{} terminated!", task.task_id);
         drop(task_manager_inner);
         self.run_first();
     }
 
-    pub fn set_priority(&self, prio: usize) {
+    pub fn set_priority(&self, prio: isize) -> isize{
         let mut inner = self.inner.borrow_mut();
-        let id = inner.current_task_id.unwrap();
-        inner.dispatcher.set_priority(id, prio);
+        let mut task = inner.current_task.take().unwrap();
+        let ret = task.set_priority(prio);
+        inner.current_task = Some(task);
+        ret
     }
 }

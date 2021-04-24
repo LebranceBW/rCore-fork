@@ -7,9 +7,10 @@ pub fn load_apps() -> ([usize; MAX_JOB_NUM], usize) {
     extern "C" {
         fn _num_app();
     }
-    debug!("load app to memory");
-    let app_meta_table_ptr = _num_app as usize as *const u64;
+    let app_meta_table_ptr = _num_app as usize as *const usize;
     let app_num = unsafe { app_meta_table_ptr.read_volatile() };
+    debug!("load {} app to memory.", app_num);
+    assert!(app_num <= MAX_JOB_NUM);
     let app_link_addr_table =
         unsafe { core::slice::from_raw_parts(app_meta_table_ptr.add(1), (app_num + 1) as usize) };
     debug!("app_link_addr_table = {:?}", app_link_addr_table);
@@ -30,5 +31,6 @@ pub fn load_apps() -> ([usize; MAX_JOB_NUM], usize) {
         let dst = unsafe { from_raw_parts_mut(dst_addr as *mut usize, src.len()) };
         dst.copy_from_slice(src);
     }
+    debug!("copy finished");
     (app_runtime_addresses, app_num as usize)
 }

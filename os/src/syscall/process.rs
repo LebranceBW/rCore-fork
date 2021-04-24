@@ -18,6 +18,5 @@ pub fn sys_get_time() -> isize {
 }
 
 pub fn sys_set_priority(prio: usize) -> isize {
-    set_priority(prio);
-    0
+    set_priority(prio as isize)
 }

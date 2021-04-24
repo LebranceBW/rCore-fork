@@ -24,10 +24,29 @@ impl TaskContext {
     }
 }
 
+pub const TIME_SLICE:usize = 10;
+const BigStride: usize = 699999999;
+
+#[derive(Eq, Ord)]
 pub struct TaskControlBlock {
     pub context: usize,
     // pub status: TaskStatus,
+    pub priority: usize,
+    pub stride: usize,
     pub task_id: usize,
+    pub total_time_ms: usize
+}
+
+impl core::cmp::PartialEq for TaskControlBlock {
+    fn eq(&self, other: &Self) -> bool {
+        self.stride.eq(&other.stride)
+    }
+}
+
+impl core::cmp::PartialOrd for TaskControlBlock {
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+        self.stride.partial_cmp(&other.stride).map(core::cmp::Ordering::reverse)
+    }
 }
 
 impl TaskControlBlock {
@@ -40,10 +59,26 @@ impl TaskControlBlock {
             context: init_context,
             // status: TaskStatus::Ready,
             task_id: id,
+            priority: 16,
+            stride: 0,
+            total_time_ms: 0    
         }
     }
     pub fn ptr_to_context(&self) -> *const usize {
         &self.context as *const usize
+    }
+    pub fn set_priority(&mut self, prio: isize) -> isize {
+        if prio >= 2 {
+                self.priority = prio as usize;
+                prio
+        }
+        else {
+            -1
+        }
+    }
+    pub fn update_stride(&mut self) {
+        self.total_time_ms += TIME_SLICE;
+        self.stride += BigStride / self.priority
     }
 }
 
