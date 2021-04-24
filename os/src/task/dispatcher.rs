@@ -12,6 +12,29 @@ pub trait Dispatcher: Sync {
     fn push(&mut self, id: TaskID);
 }
 
+pub struct JustEnoughOne {
+    vec: VecDeque<TaskID>
+}
+
+impl Dispatcher for JustEnoughOne {
+    fn set_priority(&mut self, task_id: TaskID, prio: usize) {}
+    fn pop(&mut self) -> Option<TaskID> {
+        self.vec.pop_back()}
+    fn push(&mut self, id: TaskID) 
+    {self.vec.push_front(id)}
+}
+
+impl JustEnoughOne {
+    pub fn new(tasks_num: usize) -> Self {
+        let mut vec = VecDeque::new();
+        for i in 0..tasks_num {
+            vec.push_back(i);
+        }
+        Self {
+            vec}
+    }
+}
+
 #[derive(PartialOrd, PartialEq)]
 struct StrideElem {
     id: TaskID,

@@ -18,7 +18,8 @@ struct TaskManagerInner {
     tasks: [TaskControlBlock; MAX_JOB_NUM],
     tasks_num: usize,
     current_task_id: Option<usize>,
-    dispatcher: Stride, // dispatcher: JustEnoughOne
+    // dispatcher: Stride,
+    dispatcher: JustEnoughOne
 }
 pub struct TaskManager {
     inner: RefCell<TaskManagerInner>,
@@ -39,7 +40,7 @@ impl TaskManager {
                 tasks,
                 tasks_num,
                 current_task_id,
-                dispatcher: Stride::new(tasks_num),
+                dispatcher: JustEnoughOne::new(tasks_num),
             }),
         }
     }
