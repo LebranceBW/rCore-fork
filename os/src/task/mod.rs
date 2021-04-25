@@ -1,5 +1,4 @@
 pub mod context;
-mod dispatcher;
 mod task_manager;
 
 use crate::loader::load_apps;

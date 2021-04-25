@@ -9,9 +9,9 @@ map  :NERDTreeToggle
 snoremap <silent>  c
 snoremap  "_c
 nnoremap ^[ ^[
-nmap \r <Plug>(quickrun)
-xmap \r <Plug>(quickrun)
 omap \r <Plug>(quickrun)
+xmap \r <Plug>(quickrun)
+nmap \r <Plug>(quickrun)
 smap \r <Plug>(quickrun)
 xmap gx <Plug>NetrwBrowseXVis
 smap gx <Plug>NetrwBrowseXVis
@@ -25,10 +25,10 @@ nmap <silent> gr <Plug>(coc-references)
 nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gy <Plug>(coc-type-definition)
 nmap <silent> gd <Plug>(coc-definition)
-snoremap <C-R> "_c
-snoremap <silent> <C-H> c
-snoremap <silent> <Del> c
 snoremap <silent> <BS> c
+snoremap <silent> <Del> c
+snoremap <silent> <C-H> c
+snoremap <C-R> "_c
 vnoremap <silent> <Plug>NetrwBrowseXVis :call netrw#BrowseXVis()
 nnoremap <silent> <Plug>NetrwBrowseX :call netrw#BrowseX(netrw#GX(),netrw#CheckIfRemote(netrw#GX()))
 onoremap <silent> <Plug>(coc-classobj-a) :call coc#rpc#request('selectSymbolRange', [v:false, '', ['Interface', 'Struct', 'Class']])
@@ -94,6 +94,7 @@ set noswapfile
 set tabstop=4
 set visualbell
 set wildignore=*.pyc
+set window=33
 let s:so_save = &so | let s:siso_save = &siso | set so=0 siso=0
 let v:this_session=expand("<sfile>:p")
 silent only
@@ -263,11 +264,14 @@ normal! zt
 2
 normal! 014|
 tabnext
-edit src/task/context.rs
+edit src/task/mod.rs
 set splitbelow splitright
 wincmd _ | wincmd |
 vsplit
-1wincmd h
+wincmd _ | wincmd |
+vsplit
+2wincmd h
+wincmd w
 wincmd w
 set nosplitbelow
 set nosplitright
@@ -276,8 +280,9 @@ set winminheight=0
 set winheight=1
 set winminwidth=0
 set winwidth=1
-exe 'vert 1resize ' . ((&columns * 73 + 73) / 146)
-exe 'vert 2resize ' . ((&columns * 72 + 73) / 146)
+exe 'vert 1resize ' . ((&columns * 48 + 73) / 146)
+exe 'vert 2resize ' . ((&columns * 48 + 73) / 146)
+exe 'vert 3resize ' . ((&columns * 48 + 73) / 146)
 argglobal
 nnoremap <buffer> <D-R> :RustRun! =join(b:rust_last_rustc_args)erust#AppendCmdLine(' -- ' . join(b:rust_last_args))
 nnoremap <buffer> <silent> <D-r> :RustRun
@@ -388,6 +393,148 @@ setlocal spelllang=en
 setlocal spelloptions=
 setlocal statusline=%!airline#statusline(1)
 setlocal suffixesadd=.rs
+setlocal noswapfile
+setlocal synmaxcol=3000
+if &syntax != 'rust'
+setlocal syntax=rust
+endif
+setlocal tabstop=4
+setlocal tagcase=
+setlocal tagfunc=
+setlocal tags=
+setlocal termwinkey=
+setlocal termwinscroll=10000
+setlocal termwinsize=
+setlocal textwidth=99
+setlocal thesaurus=
+setlocal noundofile
+setlocal undolevels=-123456
+setlocal varsofttabstop=
+setlocal vartabstop=
+setlocal wincolor=
+setlocal nowinfixheight
+setlocal nowinfixwidth
+setlocal wrap
+setlocal wrapmargin=0
+silent! normal! zE
+let s:l = 2 - ((1 * winheight(0) + 15) / 31)
+if s:l < 1 | let s:l = 1 | endif
+exe s:l
+normal! zt
+2
+normal! 0
+wincmd w
+argglobal
+if bufexists("src/task/context.rs") | buffer src/task/context.rs | else | edit src/task/context.rs | endif
+nnoremap <buffer> <D-R> :RustRun! =join(b:rust_last_rustc_args)erust#AppendCmdLine(' -- ' . join(b:rust_last_args))
+nnoremap <buffer> <silent> <D-r> :RustRun
+onoremap <buffer> <silent> [[ :call rust#Jump('o', 'Back')
+xnoremap <buffer> <silent> [[ :call rust#Jump('v', 'Back')
+nnoremap <buffer> <silent> [[ :call rust#Jump('n', 'Back')
+onoremap <buffer> <silent> ]] :call rust#Jump('o', 'Forward')
+xnoremap <buffer> <silent> ]] :call rust#Jump('v', 'Forward')
+nnoremap <buffer> <silent> ]] :call rust#Jump('n', 'Forward')
+setlocal keymap=
+setlocal noarabic
+setlocal autoindent
+setlocal backupcopy=
+setlocal balloonexpr=
+setlocal nobinary
+setlocal nobreakindent
+setlocal breakindentopt=
+setlocal bufhidden=
+setlocal buflisted
+setlocal buftype=
+setlocal cindent
+setlocal cinkeys=0{,0},!^F,o,O,0[,0]
+setlocal cinoptions=L0,(0,Ws,J1,j1
+setlocal cinwords=for,if,else,while,loop,impl,mod,unsafe,trait,struct,enum,fn,extern
+setlocal colorcolumn=
+setlocal comments=s0:/*!,m:\ ,ex:*/,s1:/*,mb:*,ex:*/,:///,://!,://
+setlocal commentstring=//%s
+setlocal complete=.,w,b,u,t,i
+setlocal concealcursor=
+setlocal conceallevel=0
+setlocal completefunc=
+setlocal nocopyindent
+setlocal cryptmethod=
+setlocal nocursorbind
+setlocal nocursorcolumn
+setlocal nocursorline
+setlocal cursorlineopt=both
+setlocal define=
+setlocal dictionary=
+setlocal nodiff
+setlocal equalprg=
+setlocal errorformat=
+setlocal expandtab
+if &filetype != 'rust'
+setlocal filetype=rust
+endif
+setlocal fixendofline
+setlocal foldcolumn=0
+setlocal foldenable
+setlocal foldexpr=0
+setlocal foldignore=#
+setlocal foldlevel=0
+setlocal foldmarker={{{,}}}
+setlocal foldmethod=manual
+setlocal foldminlines=1
+setlocal foldnestmax=20
+setlocal foldtext=foldtext()
+setlocal formatexpr=
+setlocal formatoptions=croqnlj
+setlocal formatlistpat=^\\s*\\d\\+[\\]:.)}\\t\ ]\\s*
+setlocal formatprg=
+setlocal grepprg=
+setlocal iminsert=0
+setlocal imsearch=-1
+setlocal include=
+setlocal includeexpr=substitute(v:fname,'::','/','g')
+setlocal indentexpr=GetRustIndent(v:lnum)
+setlocal indentkeys=0{,0},!^F,o,O,0[,0]
+setlocal noinfercase
+setlocal iskeyword=@,48-57,_,192-255
+setlocal keywordprg=
+setlocal nolinebreak
+setlocal nolisp
+setlocal lispwords=
+setlocal nolist
+setlocal makeencoding=
+setlocal makeprg=
+setlocal matchpairs=(:),{:},[:]
+setlocal modeline
+setlocal modifiable
+setlocal nrformats=bin,octal,hex
+set number
+setlocal number
+setlocal numberwidth=4
+setlocal omnifunc=
+setlocal path=
+setlocal nopreserveindent
+setlocal nopreviewwindow
+setlocal quoteescape=\\
+setlocal noreadonly
+setlocal norelativenumber
+setlocal norightleft
+setlocal rightleftcmd=search
+setlocal noscrollbind
+setlocal scrolloff=-1
+setlocal shiftwidth=4
+setlocal noshortname
+setlocal showbreak=
+setlocal sidescrolloff=-1
+set signcolumn=number
+setlocal signcolumn=number
+setlocal smartindent
+setlocal softtabstop=4
+setlocal nospell
+setlocal spellcapcheck=[.?!]\\_[\\])'\"\	\ ]\\+
+setlocal spellfile=
+setlocal spelllang=en
+setlocal spelloptions=
+setlocal statusline=%!airline#statusline(2)
+setlocal suffixesadd=.rs
 setlocal swapfile
 setlocal synmaxcol=3000
 if &syntax != 'rust'
@@ -417,7 +564,7 @@ if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 30
-normal! 05|
+normal! 0
 wincmd w
 argglobal
 if bufexists("src/task/task_manager.rs") | buffer src/task/task_manager.rs | else | edit src/task/task_manager.rs | endif
@@ -528,7 +675,7 @@ setlocal spellcapcheck=[.?!]\\_[\\])'\"\	\ ]\\+
 setlocal spellfile=
 setlocal spelllang=en
 setlocal spelloptions=
-setlocal statusline=%!airline#statusline(2)
+setlocal statusline=%!airline#statusline(3)
 setlocal suffixesadd=.rs
 setlocal noswapfile
 setlocal synmaxcol=3000
@@ -554,16 +701,16 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 23 - ((22 * winheight(0) + 15) / 31)
+let s:l = 53 - ((26 * winheight(0) + 15) / 31)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-23
-normal! 05|
+53
+normal! 017|
 wincmd w
-2wincmd w
-exe 'vert 1resize ' . ((&columns * 73 + 73) / 146)
-exe 'vert 2resize ' . ((&columns * 72 + 73) / 146)
+exe 'vert 1resize ' . ((&columns * 48 + 73) / 146)
+exe 'vert 2resize ' . ((&columns * 48 + 73) / 146)
+exe 'vert 3resize ' . ((&columns * 48 + 73) / 146)
 tabnext
 edit src/syscall/mod.rs
 set splitbelow splitright
@@ -578,8 +725,8 @@ set winminheight=0
 set winheight=1
 set winminwidth=0
 set winwidth=1
-exe 'vert 1resize ' . ((&columns * 60 + 73) / 146)
-exe 'vert 2resize ' . ((&columns * 85 + 73) / 146)
+exe 'vert 1resize ' . ((&columns * 73 + 73) / 146)
+exe 'vert 2resize ' . ((&columns * 72 + 73) / 146)
 argglobal
 nnoremap <buffer> <D-R> :RustRun! =join(b:rust_last_rustc_args)erust#AppendCmdLine(' -- ' . join(b:rust_last_args))
 nnoremap <buffer> <silent> <D-r> :RustRun
@@ -714,7 +861,7 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 19 - ((18 * winheight(0) + 15) / 31)
+let s:l = 19 - ((7 * winheight(0) + 15) / 31)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -856,15 +1003,15 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 8 - ((7 * winheight(0) + 15) / 31)
+let s:l = 8 - ((0 * winheight(0) + 15) / 31)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 8
 normal! 0
 wincmd w
-exe 'vert 1resize ' . ((&columns * 60 + 73) / 146)
-exe 'vert 2resize ' . ((&columns * 85 + 73) / 146)
+exe 'vert 1resize ' . ((&columns * 73 + 73) / 146)
+exe 'vert 2resize ' . ((&columns * 72 + 73) / 146)
 tabnext
 edit src/console.rs
 set splitbelow splitright
@@ -882,9 +1029,9 @@ set winminheight=0
 set winheight=1
 set winminwidth=0
 set winwidth=1
-exe 'vert 1resize ' . ((&columns * 48 + 73) / 146)
-exe 'vert 2resize ' . ((&columns * 48 + 73) / 146)
-exe 'vert 3resize ' . ((&columns * 48 + 73) / 146)
+exe 'vert 1resize ' . ((&columns * 39 + 73) / 146)
+exe 'vert 2resize ' . ((&columns * 40 + 73) / 146)
+exe 'vert 3resize ' . ((&columns * 65 + 73) / 146)
 argglobal
 nnoremap <buffer> <D-R> :RustRun! =join(b:rust_last_rustc_args)erust#AppendCmdLine(' -- ' . join(b:rust_last_args))
 nnoremap <buffer> <silent> <D-r> :RustRun
@@ -1161,12 +1308,12 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 34 - ((17 * winheight(0) + 15) / 31)
+let s:l = 34 - ((0 * winheight(0) + 15) / 31)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 34
-normal! 032|
+normal! 01|
 wincmd w
 argglobal
 if bufexists("src/mylog.rs") | buffer src/mylog.rs | else | edit src/mylog.rs | endif
@@ -1310,9 +1457,9 @@ normal! zt
 39
 normal! 0
 wincmd w
-exe 'vert 1resize ' . ((&columns * 48 + 73) / 146)
-exe 'vert 2resize ' . ((&columns * 48 + 73) / 146)
-exe 'vert 3resize ' . ((&columns * 48 + 73) / 146)
+exe 'vert 1resize ' . ((&columns * 39 + 73) / 146)
+exe 'vert 2resize ' . ((&columns * 40 + 73) / 146)
+exe 'vert 3resize ' . ((&columns * 65 + 73) / 146)
 tabnext
 edit src/trap/mod.rs
 set splitbelow splitright
@@ -1327,8 +1474,8 @@ set winminheight=0
 set winheight=1
 set winminwidth=0
 set winwidth=1
-exe 'vert 1resize ' . ((&columns * 60 + 73) / 146)
-exe 'vert 2resize ' . ((&columns * 85 + 73) / 146)
+exe 'vert 1resize ' . ((&columns * 73 + 73) / 146)
+exe 'vert 2resize ' . ((&columns * 72 + 73) / 146)
 argglobal
 nnoremap <buffer> <D-R> :RustRun! =join(b:rust_last_rustc_args)erust#AppendCmdLine(' -- ' . join(b:rust_last_args))
 nnoremap <buffer> <silent> <D-r> :RustRun
@@ -1604,8 +1751,8 @@ normal! zt
 1
 normal! 0
 wincmd w
-exe 'vert 1resize ' . ((&columns * 60 + 73) / 146)
-exe 'vert 2resize ' . ((&columns * 85 + 73) / 146)
+exe 'vert 1resize ' . ((&columns * 73 + 73) / 146)
+exe 'vert 2resize ' . ((&columns * 72 + 73) / 146)
 tabnext
 edit src/timer.rs
 set splitbelow splitright
@@ -1620,8 +1767,8 @@ set winminheight=0
 set winheight=1
 set winminwidth=0
 set winwidth=1
-exe 'vert 1resize ' . ((&columns * 60 + 73) / 146)
-exe 'vert 2resize ' . ((&columns * 85 + 73) / 146)
+exe 'vert 1resize ' . ((&columns * 49 + 73) / 146)
+exe 'vert 2resize ' . ((&columns * 96 + 73) / 146)
 argglobal
 nnoremap <buffer> <D-R> :RustRun! =join(b:rust_last_rustc_args)erust#AppendCmdLine(' -- ' . join(b:rust_last_args))
 nnoremap <buffer> <silent> <D-r> :RustRun
@@ -1905,8 +2052,8 @@ normal! zt
 7
 normal! 0
 wincmd w
-exe 'vert 1resize ' . ((&columns * 60 + 73) / 146)
-exe 'vert 2resize ' . ((&columns * 85 + 73) / 146)
+exe 'vert 1resize ' . ((&columns * 49 + 73) / 146)
+exe 'vert 2resize ' . ((&columns * 96 + 73) / 146)
 tabnext 2
 set stal=1
 badd +1 src/lang_items.rs

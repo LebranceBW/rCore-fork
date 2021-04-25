@@ -14,7 +14,7 @@ pub fn sys_yield() -> isize {
 }
 
 pub fn sys_get_time() -> isize {
-    unsafe { get_time_ms() as isize }
+    get_time_ms() as isize 
 }
 
 pub fn sys_set_priority(prio: usize) -> isize {

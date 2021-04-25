@@ -24,17 +24,16 @@ impl TaskContext {
     }
 }
 
-pub const TIME_SLICE:usize = 10;
-const BigStride: usize = 699999999;
+pub const TIME_SLICE: usize = 10;
+const BIG_STRIDE: usize = 699999999;
 
 #[derive(Eq, Ord)]
 pub struct TaskControlBlock {
     pub context: usize,
-    // pub status: TaskStatus,
     pub priority: usize,
     pub stride: usize,
     pub task_id: usize,
-    pub total_time_ms: usize
+    pub total_time_ms: usize,
 }
 
 impl core::cmp::PartialEq for TaskControlBlock {
@@ -45,7 +44,9 @@ impl core::cmp::PartialEq for TaskControlBlock {
 
 impl core::cmp::PartialOrd for TaskControlBlock {
     fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
-        self.stride.partial_cmp(&other.stride).map(core::cmp::Ordering::reverse)
+        self.stride
+            .partial_cmp(&other.stride)
+            .map(core::cmp::Ordering::reverse)
     }
 }
 
@@ -57,11 +58,10 @@ impl TaskControlBlock {
         let init_context = KERNEL_STACKS[id].prepare_runtime_stack(task_context, trap_context);
         Self {
             context: init_context,
-            // status: TaskStatus::Ready,
             task_id: id,
             priority: 16,
             stride: 0,
-            total_time_ms: 0    
+            total_time_ms: 0,
         }
     }
     pub fn ptr_to_context(&self) -> *const usize {
@@ -69,16 +69,15 @@ impl TaskControlBlock {
     }
     pub fn set_priority(&mut self, prio: isize) -> isize {
         if prio >= 2 {
-                self.priority = prio as usize;
-                prio
-        }
-        else {
+            self.priority = prio as usize;
+            prio
+        } else {
             -1
         }
     }
     pub fn update_stride(&mut self) {
         self.total_time_ms += TIME_SLICE;
-        self.stride += BigStride / self.priority
+        self.stride += BIG_STRIDE / self.priority
     }
 }
 

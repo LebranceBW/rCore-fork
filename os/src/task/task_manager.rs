@@ -1,6 +1,6 @@
-use alloc::collections::BinaryHeap;
 use crate::config::MAX_JOB_NUM;
-use crate::task::context::{TIME_SLICE, TaskControlBlock};
+use crate::task::context::{TaskControlBlock, TIME_SLICE};
+use alloc::collections::BinaryHeap;
 use core::cell::RefCell;
 use core::mem::drop;
 use log::debug;
@@ -16,7 +16,7 @@ extern "C" {
 
 struct TaskManagerInner {
     tasks: BinaryHeap<TaskControlBlock>,
-    current_task: Option<TaskControlBlock>
+    current_task: Option<TaskControlBlock>,
 }
 pub struct TaskManager {
     inner: RefCell<TaskManagerInner>,
@@ -27,16 +27,14 @@ unsafe impl Sync for TaskManager {}
 impl TaskManager {
     pub fn new((addr, tasks_num): ([usize; MAX_JOB_NUM], usize)) -> Self {
         let mut tasks = BinaryHeap::new();
-        for i in 0..tasks_num{
+        for i in 0..tasks_num {
             tasks.push(TaskControlBlock::new(addr[i], i))
         }
         Self {
-            inner: RefCell::new(
-                TaskManagerInner {
-                    tasks,
-                    current_task: None
-                }
-            )
+            inner: RefCell::new(TaskManagerInner {
+                tasks,
+                current_task: None,
+            }),
         }
     }
     pub fn run_next(&self) {
@@ -46,11 +44,13 @@ impl TaskManager {
                 next_task.update_stride();
                 let switch_in_context_ptr = next_task.ptr_to_context();
                 let switch_out_context_ptr = current_task.ptr_to_context();
-                debug!("Task_{} <==> Task_{}", current_task.task_id,  next_task.task_id);
+                debug!(
+                    "Task_{} <==> Task_{}",
+                    current_task.task_id, next_task.task_id
+                );
                 if current_task.total_time_ms > 500 * TIME_SLICE {
                     warn!("Current task time out. X");
-                }
-                else {
+                } else {
                     inner.tasks.push(current_task);
                 }
                 inner.current_task = Some(next_task);
@@ -66,15 +66,15 @@ impl TaskManager {
                 }
                 task.update_stride();
                 inner.current_task = Some(task);
-                static mut hasLogged: bool = false;
-                if unsafe { !hasLogged } {
+                static mut HAS_LOGGED: bool = false;
+                if unsafe { !HAS_LOGGED } {
                     debug!("No more tasks to switch in");
                     unsafe {
-                        hasLogged = true;
+                        HAS_LOGGED = true;
                     }
                 }
             }
-            _ => panic!("No more task need to execute")
+            _ => panic!("No more task need to execute"),
         }
     }
 
@@ -107,7 +107,7 @@ impl TaskManager {
         self.run_first();
     }
 
-    pub fn set_priority(&self, prio: isize) -> isize{
+    pub fn set_priority(&self, prio: isize) -> isize {
         let mut inner = self.inner.borrow_mut();
         let mut task = inner.current_task.take().unwrap();
         let ret = task.set_priority(prio);
